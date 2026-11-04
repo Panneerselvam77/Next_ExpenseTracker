@@ -1,0 +1,59 @@
+{
+  "transactions": [
+    {
+      "id": "1",
+      "invoice": "INV-2026-001",
+      "category": "Groceries",
+      "subcategory": "Stationery",
+      "type": "Expense",
+      "amount": 120.5,
+      "createdat": "2026-10-15T09:30:00Z"
+    },
+    {
+      "id": "2",
+      "invoice": "INV-2026-002",
+      "category": "Utilities",
+      "subcategory": "Network Providers",
+      "type": "Expense",
+      "amount": 79.99,
+      "createdat": "2026-10-16T14:15:00Z"
+    },
+    {
+      "id": "3",
+      "invoice": "INV-2026-003",
+      "category": "Salary",
+      "subcategory": "Consulting",
+      "type": "INCOME",
+      "amount": 1500,
+      "createdat": "2026-10-18T11:00:00Z"
+    },
+    {
+      "type": "INCOME",
+      "date": "2026-11-05",
+      "category": "Groceries",
+      "subcategory": "Lunch",
+      "description": "UPI",
+      "amount": "100",
+      "id": "gj96b2R8Va8"
+    },
+    {
+      "type": "INCOME",
+      "date": "2026-11-05",
+      "category": "Groceries",
+      "subcategory": "Lunch",
+      "description": "UPI",
+      "amount": "100",
+      "id": "EeJi3iknBkg"
+    },
+    {
+      "type": "EXPENSE",
+      "date": "2026-11-06",
+      "category": "Utils",
+      "subcategory": "Vegitable",
+      "description": "UPI",
+      "amount": "200",
+      "id": "PHzWKbY2MwU"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
