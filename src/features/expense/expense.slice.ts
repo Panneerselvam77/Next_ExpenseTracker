@@ -4,13 +4,21 @@ import {
   type PayloadAction,
 } from "@reduxjs/toolkit";
 import type { Expense } from "./expense.types";
-import { addExpense, fetchExpense } from "./expense.api";
+import {
+  addExpense,
+  deleteExp,
+  fetchExpense,
+  updateExpense,
+} from "./expense.api";
 
 interface ExpenseState {
   transactions: Expense[];
   monthlyExpenses: number;
   monthlyIncome: number;
   totalSpending: number;
+  totalIncome: number;
+  total: number;
+  deletingIds: string[];
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
@@ -20,6 +28,9 @@ const initialState: ExpenseState = {
   monthlyExpenses: 0,
   monthlyIncome: 0,
   totalSpending: 0,
+  totalIncome: 0,
+  total: 0,
+  deletingIds: [],
   status: "idle",
   error: null,
 };
@@ -30,8 +41,10 @@ export const fetchTransactions = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       return await fetchExpense();
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch transactions");
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to fetch transactions",
+      );
     }
   },
 );
@@ -42,13 +55,45 @@ export const addTransaction = createAsyncThunk(
   async (newTransaction: Expense, { rejectWithValue }) => {
     try {
       return await addExpense(newTransaction);
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to add transaction");
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to add transaction",
+      );
     }
   },
 );
 
-const calculateExpenseTotal = (transactions: Expense[]) => {
+export const updateTransaction = createAsyncThunk<
+  Expense,
+  { id: string | number; changes: Partial<Expense> },
+  { rejectValue: string }
+>("expense/updateTransaction", async ({ id, changes }, { rejectWithValue }) => {
+  try {
+    return await updateExpense(id, changes);
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : "Failed to update transaction",
+    );
+  }
+});
+
+export const deleteTransaction = createAsyncThunk<
+  string,
+  string | number,
+  { rejectValue: string }
+>("expense/deleteTransaction", async (id, { rejectWithValue }) => {
+  const parsedId = String(id);
+  try {
+    await deleteExp(parsedId);
+    return parsedId;
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : "Failed to delete transaction",
+    );
+  }
+});
+
+const totalExpense = (transactions: Expense[]) => {
   return transactions.reduce(
     (total, transaction) =>
       transaction.type?.toLowerCase() === "expense"
@@ -57,6 +102,22 @@ const calculateExpenseTotal = (transactions: Expense[]) => {
     0,
   );
 };
+
+const totalIncome = (transactions: Expense[]) => {
+  return transactions.reduce(
+    (total, transaction) =>
+      transaction.type?.toLowerCase() === "income"
+        ? total + Number(transaction.amount)
+        : total,
+    0,
+  );
+};
+
+const totalAmout = (transactions: Expense[]) => {
+  const sum = totalIncome(transactions) - totalExpense(transactions);
+  return sum;
+};
+
 const expenseSlice = createSlice({
   name: "expense",
   initialState,
@@ -73,10 +134,9 @@ const expenseSlice = createSlice({
         (state, action: PayloadAction<Expense[]>) => {
           state.status = "succeeded";
           state.transactions = action.payload;
-          console.log("Action Payload: ", action.payload);
-          console.log("Action Payload: ", state.transactions);
-          state.totalSpending = calculateExpenseTotal(state.transactions);
-          console.log("state.totalSpending: ", state.totalSpending);
+          state.totalSpending = totalExpense(state.transactions);
+          state.totalIncome = totalIncome(state.transactions);
+          state.total = totalAmout(state.transactions);
         },
       )
       .addCase(fetchTransactions.rejected, (state, action) => {
@@ -88,9 +148,61 @@ const expenseSlice = createSlice({
         addTransaction.fulfilled,
         (state, action: PayloadAction<Expense[]>) => {
           state.transactions.push(...action.payload);
-          state.totalSpending = calculateExpenseTotal(state.transactions);
+          state.totalSpending = totalExpense(state.transactions);
+          state.totalIncome = totalIncome(state.transactions);
+          state.total = totalAmout(state.transactions);
         },
-      );
+      )
+      // Delete
+      .addCase(deleteTransaction.pending, (state, action) => {
+        const id = String(action.meta.arg);
+        if (!state.deletingIds.includes(id)) {
+          state.deletingIds.push(id);
+        }
+        state.error = null;
+      })
+      .addCase(deleteTransaction.fulfilled, (state, action) => {
+        state.transactions = state.transactions.filter(
+          (transaction) => String(transaction.id) !== action.payload,
+        );
+        state.deletingIds = state.deletingIds.filter(
+          (id) => id !== action.payload,
+        );
+        state.totalSpending = totalExpense(state.transactions);
+        state.totalIncome = totalIncome(state.transactions);
+        state.total = totalAmout(state.transactions);
+      })
+      .addCase(deleteTransaction.rejected, (state, action) => {
+        const id = String(action.meta.arg);
+        state.deletingIds = state.deletingIds.filter(
+          (deletingId) => deletingId !== id,
+        );
+        state.error =
+          action.payload ??
+          action.error.message ??
+          "Failed to delete transaction";
+      })
+      // Update
+      .addCase(updateTransaction.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateTransaction.fulfilled, (state, action) => {
+        const index = state.transactions.findIndex(
+          (transaction) => String(transaction.id) === String(action.payload.id),
+        );
+        if (index !== -1) {
+          state.transactions[index] = action.payload;
+        }
+        state.totalSpending = totalExpense(state.transactions);
+        state.totalIncome = totalIncome(state.transactions);
+        state.total = totalAmout(state.transactions);
+      })
+      .addCase(updateTransaction.rejected, (state, action) => {
+        state.error =
+          action.payload ??
+          action.error.message ??
+          "Failed to update transaction";
+      });
   },
 });
 

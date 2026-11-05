@@ -14,14 +14,18 @@ import {
 
 interface DatePickerProps {
   id?: string;
+  value?: Date | null;
   onDateChange?: (date: Date | undefined) => void;
 }
 
-export function DatePicker({ id, onDateChange }: DatePickerProps) {
-  const [date, setDate] = React.useState<Date>();
+export function DatePicker({ id, value, onDateChange }: DatePickerProps) {
+  const [internalDate, setInternalDate] = React.useState<Date>();
+  const date = value === undefined ? internalDate : value ?? undefined;
 
   function handleDateChange(selectedDate: Date | undefined) {
-    setDate(selectedDate);
+    if (value === undefined) {
+      setInternalDate(selectedDate);
+    }
     onDateChange?.(selectedDate);
   }
 

@@ -1,13 +1,31 @@
 "use client";
 import TransactionTable from "@/components/TranscationTable";
 import TransactionForm from "@/components/TransactionForm";
-import { useState } from "react";
 import { Wallet } from "lucide-react";
 import DisplayCard from "@/components/DisplayCard";
+import { useAppSelector } from "@/hooks/hooks";
+import { se } from "date-fns/locale";
 
 export default function Expense() {
-  const [refresh, setRefresh] = useState(false);
-  const triggerRefresh = () => setRefresh((prev) => !prev);
+  const { totalIncome, totalSpending } = useAppSelector(
+    (state) => state.expense,
+  );
+  const cardDisplay = [
+    {
+      cardTitle: "Total Income",
+      cardDescription: "Cumulative income logged this period",
+      cardAmount: parseInt(`${totalIncome}`),
+      cardLogo: "",
+      cardType: "Income",
+    },
+    {
+      cardTitle: "Total Expense",
+      cardDescription: "Cumulative expenses logged this period",
+      cardAmount: parseInt(`${totalSpending}`),
+      cardLogo: "",
+      cardType: "Expense",
+    },
+  ];
   return (
     <div className="min-h-screen bg-muted/30 p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
       {/* Header Banner */}
@@ -22,18 +40,20 @@ export default function Expense() {
           </p>
         </div>
       </div>
-      <div>
-        <DisplayCard />
+      <div className="flex gap-5 ">
+        {cardDisplay.map((prop) => (
+          <DisplayCard prop={prop} key={prop.cardTitle} />
+        ))}
       </div>
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Table / Data Section */}
         <div className="lg:col-span-2">
-          <TransactionTable refresh={refresh} />
+          <TransactionTable />
         </div>
         {/* Form Section */}
         <div className="lg:col-span-1">
-          <TransactionForm onTransactionAdded={triggerRefresh} />
+          <TransactionForm />
         </div>
       </div>
     </div>
