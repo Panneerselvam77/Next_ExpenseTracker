@@ -53,6 +53,15 @@
       "description": "UPI",
       "amount": "200",
       "id": "PHzWKbY2MwU"
+    },
+    {
+      "type": "EXPENSE",
+      "date": "2026-11-04",
+      "category": "Food",
+      "subcategory": "Lunch",
+      "description": "UPI",
+      "amount": "1000",
+      "id": "is_9zvf06sc"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

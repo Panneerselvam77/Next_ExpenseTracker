@@ -9,7 +9,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
 import { category, subcategory } from "@/mock/mock";
-import axios from "axios";
+import { addExpense } from "@/features/expense/expense.api";
 
 const transactionTypes = ["INCOME", "EXPENSE"] as const;
 const transactionCategories = category;
@@ -67,11 +67,10 @@ export default function TransactionForm({
 
       const newTransaction = {
         ...formData,
+        id: Date.now(),
       };
-      const url = "http://localhost:5000/transactions";
 
-      const res = await axios.post(url, newTransaction);
-      console.log("New Transaction Added: ", res.data);
+      addExpense(newTransaction);
       handleClearForm();
       onTransactionAdded();
     } catch (error) {

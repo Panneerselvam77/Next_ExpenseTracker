@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "@/features/auth/auth.slice";
+import expenseReducer from "@/features/expense/expense.slice";
 
 export const makeStore = () =>
   configureStore({
     reducer: {
       auth: authReducer,
+      expense: expenseReducer,
     },
   });
 

@@ -10,36 +10,49 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Expense } from "@/features/expense/expense.types";
-// import { transactions } from "@/mock/mock";
-// import { fetchExpense } from "@/features/expense/expense.api";
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { PenIcon, Trash } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
+import { fetchTransactions } from "@/features/expense/expense.slice";
 
-const thead = ["Invoice", "Date", "Catagory", "Sub-Catagory", "Type", "Amount"];
+const thead = [
+  "Invoice",
+  "Date",
+  "Catagory",
+  "Sub-Catagory",
+  "Type",
+  "Amount",
+  "Action",
+];
 
 export default function TransactionTable({ refresh }: { refresh: boolean }) {
-  const [transactions, setTransactions] = useState<Expense[]>([]);
+  const dispatch = useAppDispatch();
+
+  const { transactions } = useAppSelector((state) => state.expense);
+
   const formatDate = (value: string | undefined) => {
     if (!value) return "—";
-
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "—" : value.slice(0, 10);
   };
 
-  const fetchExpenses = async () => {
-    try {
-      const url = "http://localhost:5000/transactions";
-      const res = await axios.get(url);
-      setTransactions(res.data);
-      console.log("Res; ", res.data);
-    } catch (error) {
-      console.log("Error: ", error);
-    }
-  };
-
   useEffect(() => {
-    fetchExpenses();
-  }, [refresh]);
+    dispatch(fetchTransactions());
+  }, []);
+
+  const handleAmout = () => {
+    console.log(
+      "Transaction",
+      transactions.reduce(
+        (total, transaction) =>
+          transaction.type?.toLowerCase() === "expense"
+            ? total + Number(transaction.amount)
+            : total,
+        0,
+      ),
+    );
+  };
+  handleAmout();
   return (
     <Table>
       <TableCaption>A list of your recent invoices.</TableCaption>
@@ -59,10 +72,6 @@ export default function TransactionTable({ refresh }: { refresh: boolean }) {
               {th}
             </TableHead>
           ))}
-          {/* <TableHead className="w-[100px]">Invoice</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Method</TableHead>
-          <TableHead className="text-right">Amount</TableHead> */}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -78,6 +87,14 @@ export default function TransactionTable({ refresh }: { refresh: boolean }) {
             <TableCell>{transaction.subcategory}</TableCell>
             <TableCell>{transaction.type}</TableCell>
             <TableCell className="text-right">{transaction.amount}</TableCell>
+            <TableCell className="flex">
+              <span>
+                <PenIcon className="h-4 w-4" />
+              </span>
+              <span>
+                <Trash className="h-4 w-4" />
+              </span>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
