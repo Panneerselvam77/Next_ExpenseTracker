@@ -3,8 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { format } from "date-fns";
 import { Pencil, RotateCcw } from "lucide-react";
-import { DatePicker } from "@/components/DatePicker";
-import { ComboboxBasic } from "@/components/ComboBox";
+import { DatePicker } from "@/components/transactions/DatePicker";
+import { ComboboxBasic } from "@/components/transactions/ComboBox";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -125,7 +125,10 @@ export default function UpdateForm({
     ? new Date(`${formData.date}T00:00:00`)
     : null;
   const categories = [
-    ...new Set([...category, ...(formData.category ? [formData.category] : [])]),
+    ...new Set([
+      ...category,
+      ...(formData.category ? [formData.category] : []),
+    ]),
   ];
   const subcategories = [
     ...new Set([
@@ -142,7 +145,8 @@ export default function UpdateForm({
           Edit Transaction
         </CardTitle>
         <CardDescription>
-          Update the details for transaction #{transaction.invoice ?? transaction.id}.
+          Update the details for transaction #
+          {transaction.invoice ?? transaction.id}.
         </CardDescription>
       </CardHeader>
       <CardContent className="px-0 pb-0">
@@ -258,11 +262,7 @@ export default function UpdateForm({
           )}
 
           <div className="flex gap-3 pt-2">
-            <Button
-              type="submit"
-              className="flex-1"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
               {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
             <Button

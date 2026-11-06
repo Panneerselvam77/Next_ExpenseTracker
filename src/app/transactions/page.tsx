@@ -1,12 +1,12 @@
 "use client";
-import TransactionTable from "@/components/TranscationTable";
-import TransactionForm from "@/components/TransactionForm";
+import TransactionTable from "@/components/transactions/TranscationTable";
+import TransactionForm from "@/components/transactions/TransactionForm";
 import { Wallet } from "lucide-react";
-import DisplayCard from "@/components/DisplayCard";
+import DisplayCard from "@/components/transactions/DisplayCard";
 import { useAppSelector } from "@/hooks/hooks";
 import { se } from "date-fns/locale";
 
-export default function Expense() {
+export default function Transactions() {
   const { totalIncome, totalSpending } = useAppSelector(
     (state) => state.expense,
   );

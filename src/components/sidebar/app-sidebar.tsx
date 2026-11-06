@@ -24,7 +24,7 @@ import Link from "next/link";
 // Menu items.
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "Expenses", url: "/expense", icon: IndianRupee },
+  { title: "Transactions", url: "/transactions", icon: IndianRupee },
   { title: "Split", url: "/split", icon: Split },
   { title: "Settings", url: "#", icon: Settings },
 ];

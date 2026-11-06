@@ -1,4 +1,3 @@
-// name=TranscationTable.tsx
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -35,6 +34,9 @@ import {
   ReceiptText,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import {
@@ -46,15 +48,8 @@ import type { Expense } from "@/features/expense/expense.types";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
 
-const thead = [
-  "Invoice / ID",
-  "Date",
-  "Category",
-  "Subcategory",
-  "Type",
-  "Amount",
-  "Actions",
-];
+type SortField = "date" | "category" | "amount" | null;
+type SortOrder = "asc" | "desc";
 
 export default function TransactionTable() {
   const router = useRouter();
@@ -66,6 +61,10 @@ export default function TransactionTable() {
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10; // Number of items per page
+
+  // Sorting State
+  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   const { transactions, status, deletingIds, error, total } = useAppSelector(
     (state) => state.expense,
@@ -82,24 +81,83 @@ export default function TransactionTable() {
     return Number.isNaN(date.getTime()) ? "—" : value.slice(0, 10);
   };
 
-  const handleDelete = (id: string | number) => {
+  const handleDelete = (e: React.MouseEvent, id: string | number) => {
+    e.stopPropagation();
     dispatch(deleteTransaction(id));
   };
 
-  // Compute total pages
-  const totalPages = Math.ceil((transactions?.length || 0) / pageSize);
+  const handleEditClick = (e: React.MouseEvent, transaction: Expense) => {
+    e.stopPropagation();
+    setEditingTransaction(transaction);
+  };
 
-  // Slice transactions for current page
+  // Handle column header sort toggle
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1); // Reset to first page on sort change
+  };
+
+  // Sorted transactions memo
+  const sortedTransactions = useMemo(() => {
+    if (!transactions) return [];
+    const items = [...transactions];
+
+    if (!sortField) return items;
+
+    return items.sort((a, b) => {
+      let valA: any = "";
+      let valB: any = "";
+
+      if (sortField === "date") {
+        valA = new Date(a.date ?? a.createdat ?? 0).getTime();
+        valB = new Date(b.date ?? b.createdat ?? 0).getTime();
+      } else if (sortField === "category") {
+        valA = (a.category || "").toLowerCase();
+        valB = (b.category || "").toLowerCase();
+      } else if (sortField === "amount") {
+        valA = Number(a.amount) || 0;
+        valB = Number(b.amount) || 0;
+      }
+
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [transactions, sortField, sortOrder]);
+
+  // Compute total pages based on sorted transactions
+  const totalPages = Math.ceil((sortedTransactions.length || 0) / pageSize);
+
+  // Slice sorted transactions for current page
   const paginatedTransactions = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
-    return transactions.slice(start, start + pageSize);
-  }, [transactions, currentPage]);
+    return sortedTransactions.slice(start, start + pageSize);
+  }, [sortedTransactions, currentPage]);
 
   // Handle page change safely
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  // Helper for sorting icon rendering
+  const renderSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return (
+        <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 text-muted-foreground/50 inline" />
+      );
+    }
+    return sortOrder === "asc" ? (
+      <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary inline" />
+    ) : (
+      <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary inline" />
+    );
   };
 
   return (
@@ -110,7 +168,8 @@ export default function TransactionTable() {
             <ReceiptText className="h-5 w-5 text-primary" /> Recent Transactions
           </CardTitle>
           <CardDescription>
-            A history of your recorded income and expenses.
+            A history of your recorded income and expenses. Click column headers
+            to sort.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -123,22 +182,38 @@ export default function TransactionTable() {
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  {thead.map((th) => (
-                    <TableHead
-                      key={th}
-                      className={
-                        th === "Amount"
-                          ? "text-right"
-                          : th === "Actions"
-                            ? "text-center w-[100px]"
-                            : th === "Invoice / ID"
-                              ? "w-[120px]"
-                              : ""
-                      }
-                    >
-                      {th}
-                    </TableHead>
-                  ))}
+                  <TableHead className="w-[120px]">Invoice / ID</TableHead>
+
+                  {/* Sortable Date Header */}
+                  <TableHead
+                    className="cursor-pointer select-none hover:text-foreground transition-colors"
+                    onClick={() => handleSort("date")}
+                  >
+                    Date {renderSortIcon("date")}
+                  </TableHead>
+
+                  {/* Sortable Category Header */}
+                  <TableHead
+                    className="cursor-pointer select-none hover:text-foreground transition-colors"
+                    onClick={() => handleSort("category")}
+                  >
+                    Category {renderSortIcon("category")}
+                  </TableHead>
+
+                  <TableHead>Subcategory</TableHead>
+                  <TableHead>Type</TableHead>
+
+                  {/* Sortable Amount Header */}
+                  <TableHead
+                    className="text-right cursor-pointer select-none hover:text-foreground transition-colors"
+                    onClick={() => handleSort("amount")}
+                  >
+                    Amount {renderSortIcon("amount")}
+                  </TableHead>
+
+                  <TableHead className="text-center w-[100px]">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -167,7 +242,7 @@ export default function TransactionTable() {
                     return (
                       <TableRow
                         key={transaction.id}
-                        className="hover:bg-muted/40 transition-colors"
+                        className="hover:bg-muted/40 transition-colors cursor-pointer"
                         onClick={() =>
                           router.replace(`/expense/${transaction.id}`)
                         }
@@ -206,17 +281,17 @@ export default function TransactionTable() {
                         <TableCell
                           className={`text-right font-semibold ${isIncome ? "text-emerald-600" : "text-foreground"}`}
                         >
-                          {isIncome ? "+" : "-"}$
+                          {isIncome ? "+" : "-"}₹
                           {Number(transaction.amount).toFixed(2)}
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-center gap-1">
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-muted-foreground hover:text-primary"
-                              onClick={() => setEditingTransaction(transaction)}
+                              onClick={(e) => handleEditClick(e, transaction)}
                               aria-label={`Edit transaction ${transaction.invoice ?? transaction.id}`}
                             >
                               <PenIcon className="h-4 w-4" />
@@ -230,7 +305,7 @@ export default function TransactionTable() {
                               disabled={deletingIds.includes(
                                 String(transaction.id),
                               )}
-                              onClick={() => handleDelete(transaction.id)}
+                              onClick={(e) => handleDelete(e, transaction.id)}
                             >
                               <Trash className="h-4 w-4" />
                               <span className="sr-only">Delete</span>
@@ -247,11 +322,11 @@ export default function TransactionTable() {
                   <TableCell colSpan={5}>Total Expenses</TableCell>
                   {total > 0 ? (
                     <TableCell className="text-right font-bold text-green-600">
-                      ${total.toFixed(2)}
+                      ₹{total.toFixed(2)}
                     </TableCell>
                   ) : (
                     <TableCell className="text-right font-bold text-rose-600">
-                      ${total.toFixed(2)}
+                      ₹{total.toFixed(2)}
                     </TableCell>
                   )}
                   <TableCell />
@@ -277,7 +352,6 @@ export default function TransactionTable() {
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   (page) => {
-                    // Show first page, last page, and pages surrounding current page
                     if (
                       page === 1 ||
                       page === totalPages ||
