@@ -7,6 +7,7 @@ import {
   IndianRupee,
   UserRound,
   LogOut,
+  CalendarDays,
 } from "lucide-react";
 import {
   Sidebar,
@@ -18,13 +19,16 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import app_logo from "../../../public/app_logo.png";
+import Image from "next/image";
 
 // Menu items.
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "Transactions", url: "/transactions", icon: IndianRupee },
+  { title: "Transactions", url: "/transactions", icon: CalendarDays },
   { title: "Split", url: "/split", icon: Split },
   { title: "Settings", url: "#", icon: Settings },
 ];
@@ -39,7 +43,13 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Expense Tracker</SidebarGroupLabel>
+          <div className="flex items-center justify-between px-5 py-5 group-data-[collapsible=icon]:justify-center">
+            <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+              {/* Expense Tracker */}
+              <Image src={app_logo} alt="Company Logo" className="h-20 w-20" />
+            </SidebarGroupLabel>
+            <SidebarTrigger className="h-7 w-7" />
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

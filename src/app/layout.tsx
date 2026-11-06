@@ -44,9 +44,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <SidebarProvider>
               <AppSidebar />
               <div className="flex min-h-svh min-w-0 flex-1 flex-col">
-                <header className="flex h-14 items-center border-b px-4">
-                  <SidebarTrigger />
-                </header>
                 {children}
               </div>
             </SidebarProvider>

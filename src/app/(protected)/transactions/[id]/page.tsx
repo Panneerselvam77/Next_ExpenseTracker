@@ -1,4 +1,3 @@
-// name=src/app/expense/[id]/page.tsx
 import axios from "axios";
 import type { Expense } from "@/features/expense/expense.types";
 import { connection } from "next/server";
@@ -49,10 +48,10 @@ export default async function ViewTransactionById({ params }: ExpenseIdProp) {
         {/* Back Navigation */}
         <div>
           <Link
-            href="/expense"
+            href="/transactions"
             className="inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 pl-0 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+            <ArrowLeft className="h-4 w-4" /> Back to Transactions
           </Link>
         </div>
 

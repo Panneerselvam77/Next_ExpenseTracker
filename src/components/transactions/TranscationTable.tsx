@@ -244,7 +244,7 @@ export default function TransactionTable() {
                         key={transaction.id}
                         className="hover:bg-muted/40 transition-colors cursor-pointer"
                         onClick={() =>
-                          router.replace(`/expense/${transaction.id}`)
+                          router.replace(`/transactions/${transaction.id}`)
                         }
                       >
                         <TableCell className="font-mono text-xs text-muted-foreground">

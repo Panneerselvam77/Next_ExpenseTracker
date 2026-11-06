@@ -1,5 +1,12 @@
+import { cookies } from "next/headers";
 import type { AuthUser } from "@/features/auth/auth.types";
 import { API_BASE_URL } from "@/lib/api/config";
+
+export async function getSessionUser(): Promise<AuthUser | null> {
+  const accessToken = (await cookies()).get("accessToken")?.value;
+
+  return accessToken ? getAuthenticatedUser(accessToken) : null;
+}
 
 export async function getAuthenticatedUser(
   accessToken: string,

@@ -45,7 +45,7 @@ export default function NotFound() {
 
         <CardFooter className="flex-col justify-center gap-2 px-7 pb-8 sm:flex-row">
           <Link
-            href="/expense"
+            href="/dashboard"
             className={buttonVariants({ className: "w-full sm:w-auto" })}
           >
             <Home aria-hidden="true" />

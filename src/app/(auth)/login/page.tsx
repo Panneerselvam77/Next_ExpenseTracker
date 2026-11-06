@@ -37,7 +37,7 @@ export default function LoginPage() {
     try {
       await dispatch(login({ username, password })).unwrap();
 
-      router.replace("/expense");
+      router.replace("/dashboard");
     } catch {
       // The rejected thunk updates auth.error in Redux.
     }
