@@ -4,10 +4,13 @@ import {
   Home,
   Settings,
   Split,
-  IndianRupee,
   UserRound,
   LogOut,
   CalendarDays,
+  Sun,
+  Moon,
+  ChartPie,
+  FileChartColumn,
 } from "lucide-react";
 import {
   Sidebar,
@@ -18,18 +21,21 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import app_logo from "../../../public/app_logo.png";
 import Image from "next/image";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 // Menu items.
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Transactions", url: "/transactions", icon: CalendarDays },
   { title: "Split", url: "/split", icon: Split },
+  { title: "Budget", url: "#", icon: ChartPie },
+  { title: "Report", url: "#", icon: FileChartColumn },
   { title: "Settings", url: "#", icon: Settings },
 ];
 // transaction, analytics, budget,
@@ -39,6 +45,18 @@ const items_bottom = [
 ];
 
 export function AppSidebar() {
+  const { setTheme, resolvedTheme, theme } = useTheme();
+  const [defaultTheme, setDefaultTheme] = useState("light");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = (resolvedTheme || theme) === "dark";
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -70,6 +88,22 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarGroupContent>
           <SidebarMenu>
+            <SidebarMenuButton
+              onClick={toggleTheme}
+              tooltip="Toggle Theme"
+              className="h-10 cursor-pointer"
+            >
+              {mounted ? (
+                isDark ? (
+                  <Moon className="size-4 text-primary" />
+                ) : (
+                  <Sun className="size-4 text-primary" />
+                )
+              ) : (
+                <Sun className="size-4" />
+              )}
+              <span>{mounted && isDark ? "Dark Mode" : "Light Mode"}</span>{" "}
+            </SidebarMenuButton>
             {items_bottom.map((item) => (
               <SidebarMenuButton
                 key={item.title}
