@@ -44,6 +44,7 @@ import {
 import UpdateForm from "./UpdateForm";
 import type { Expense } from "@/features/expense/expense.types";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useRouter } from "next/navigation";
 
 const thead = [
   "Invoice / ID",
@@ -56,6 +57,7 @@ const thead = [
 ];
 
 export default function TransactionTable() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const [editingTransaction, setEditingTransaction] = useState<Expense | null>(
     null,
@@ -99,7 +101,6 @@ export default function TransactionTable() {
       setCurrentPage(page);
     }
   };
-  
 
   return (
     <>
@@ -167,6 +168,9 @@ export default function TransactionTable() {
                       <TableRow
                         key={transaction.id}
                         className="hover:bg-muted/40 transition-colors"
+                        onClick={() =>
+                          router.replace(`/expense/${transaction.id}`)
+                        }
                       >
                         <TableCell className="font-mono text-xs text-muted-foreground">
                           #{transaction.invoice ?? transaction.id}

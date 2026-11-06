@@ -30,7 +30,7 @@ export default function DisplayCard({ prop }: { prop: DisplayCardTypes }) {
       <CardContent>
         <div className="flex items-baseline gap-2">
           <div className="text-3xl font-bold tracking-tight text-foreground">
-            ${Number(prop.cardAmount || 0).toFixed(2)}
+            ₹{Number(prop.cardAmount || 0).toFixed(2)}
           </div>
           {prop.cardType === "Expense" ? (
             <span className="text-xs text-rose-500 font-medium flex items-center">
