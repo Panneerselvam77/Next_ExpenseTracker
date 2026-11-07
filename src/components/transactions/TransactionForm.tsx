@@ -17,7 +17,12 @@ import {
 import { PlusCircle, RotateCcw } from "lucide-react";
 
 import { category, subcategory } from "@/mock/mock";
-import { addExpense } from "@/features/expense/expense.api";
+import {
+  addTransaction,
+  fetchTransactions,
+} from "@/features/expense/expense.slice";
+import { useAppDispatch } from "@/hooks/hooks";
+import { getApiRequestErrorMessage } from "@/lib/api/errors";
 
 const transactionTypes = ["INCOME", "EXPENSE"] as const;
 const transactionCategories = category;
@@ -46,6 +51,7 @@ const initialFormData: TransactionFormData = {
 };
 
 export default function TransactionForm() {
+  const dispatch = useAppDispatch();
   const [formData, setFormData] =
     useState<TransactionFormData>(initialFormData);
   const [error, setError] = useState<string | null>(null);
@@ -77,11 +83,16 @@ export default function TransactionForm() {
         createdat: new Date().toISOString(),
       };
 
-      await addExpense(newTransaction);
+      await dispatch(addTransaction(newTransaction)).unwrap();
+      void dispatch(fetchTransactions());
       handleClearForm();
-    } catch (error) {
-      console.log("Error: ", error);
-      setError("Failed to save transaction. Please try again.");
+    } catch (submitError) {
+      setError(
+        getApiRequestErrorMessage(
+          submitError,
+          "Failed to save transaction. Please try again.",
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }

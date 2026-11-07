@@ -8,8 +8,8 @@ export async function fetchExpense(): Promise<Expense[]> {
   return res.data;
 }
 
-export async function addExpense(body: Expense) {
-  const res = await axios.post<Expense[]>(baseUrl, body);
+export async function addExpense(body: Expense): Promise<Expense> {
+  const res = await axios.post<Expense>(baseUrl, body);
   return res.data;
 }
 

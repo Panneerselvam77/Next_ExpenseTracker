@@ -22,6 +22,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarTrigger,
+  SidebarInset,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import app_logo from "../../../public/app_logo.png";

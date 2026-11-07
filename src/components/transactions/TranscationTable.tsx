@@ -59,16 +59,26 @@ export default function TransactionTable() {
   );
 
   // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSelection, setPageSelection] = useState({
+    page: 1,
+    revision: 0,
+  });
   const pageSize = 10; // Number of items per page
 
   // Sorting State
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
-  const { transactions, status, deletingIds, error, total } = useAppSelector(
-    (state) => state.expense,
-  );
+  const {
+    transactions,
+    status,
+    deletingIds,
+    error,
+    total,
+    transactionsRevision,
+  } = useAppSelector((state) => state.expense);
+  const currentPage =
+    pageSelection.revision === transactionsRevision ? pageSelection.page : 1;
 
   useEffect(() => {
     dispatch(fetchTransactions());
@@ -99,7 +109,7 @@ export default function TransactionTable() {
       setSortField(field);
       setSortOrder("asc");
     }
-    setCurrentPage(1); // Reset to first page on sort change
+    setPageSelection({ page: 1, revision: transactionsRevision });
   };
 
   // Sorted transactions memo
@@ -142,7 +152,7 @@ export default function TransactionTable() {
   // Handle page change safely
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+      setPageSelection({ page, revision: transactionsRevision });
     }
   };
 
@@ -217,7 +227,7 @@ export default function TransactionTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {status === "loading" ? (
+                {status === "loading" && transactions.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={7}

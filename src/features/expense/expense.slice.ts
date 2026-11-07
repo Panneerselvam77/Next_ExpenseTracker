@@ -1,8 +1,4 @@
-import {
-  createSlice,
-  createAsyncThunk,
-  type PayloadAction,
-} from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { Expense } from "./expense.types";
 import {
   addExpense,
@@ -19,6 +15,10 @@ interface ExpenseState {
   totalIncome: number;
   total: number;
   deletingIds: string[];
+  transactionsRevision: number;
+  lastAddedTransactionId: string | null;
+  latestFetchRequestId: string | null;
+  fetchRevision: number;
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
@@ -31,6 +31,10 @@ const initialState: ExpenseState = {
   totalIncome: 0,
   total: 0,
   deletingIds: [],
+  transactionsRevision: 0,
+  lastAddedTransactionId: null,
+  latestFetchRequestId: null,
+  fetchRevision: 0,
   status: "idle",
   error: null,
 };
@@ -50,7 +54,11 @@ export const fetchTransactions = createAsyncThunk(
 );
 
 // Async thunk to add a new transaction
-export const addTransaction = createAsyncThunk(
+export const addTransaction = createAsyncThunk<
+  Expense,
+  Expense,
+  { rejectValue: string }
+>(
   "expense/addTransaction",
   async (newTransaction: Expense, { rejectWithValue }) => {
     try {
@@ -125,34 +133,75 @@ const expenseSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // Fetch Transactions cases
-      .addCase(fetchTransactions.pending, (state) => {
+      .addCase(fetchTransactions.pending, (state, action) => {
         state.status = "loading";
         state.error = null;
+        state.latestFetchRequestId = action.meta.requestId;
+        state.fetchRevision = state.transactionsRevision;
       })
       .addCase(
         fetchTransactions.fulfilled,
-        (state, action: PayloadAction<Expense[]>) => {
+        (state, action) => {
+          if (state.latestFetchRequestId !== action.meta.requestId) return;
+
+          state.latestFetchRequestId = null;
           state.status = "succeeded";
-          state.transactions = action.payload;
+          if (state.fetchRevision !== state.transactionsRevision) return;
+
+          const transactions = [...action.payload];
+          const lastAddedIndex = transactions.findIndex(
+            (transaction) =>
+              String(transaction.id) === state.lastAddedTransactionId,
+          );
+          if (lastAddedIndex > 0) {
+            const [lastAddedTransaction] = transactions.splice(lastAddedIndex, 1);
+            if (lastAddedTransaction) {
+              transactions.unshift(lastAddedTransaction);
+            }
+          }
+
+          state.transactions = transactions;
           state.totalSpending = totalExpense(state.transactions);
           state.totalIncome = totalIncome(state.transactions);
           state.total = totalAmout(state.transactions);
         },
       )
       .addCase(fetchTransactions.rejected, (state, action) => {
+        if (state.latestFetchRequestId !== action.meta.requestId) return;
+
+        state.latestFetchRequestId = null;
+        if (state.fetchRevision !== state.transactionsRevision) {
+          state.status = "succeeded";
+          return;
+        }
+
         state.status = "failed";
         state.error = action.payload as string;
       })
       // Add Transaction cases
-      .addCase(
-        addTransaction.fulfilled,
-        (state, action: PayloadAction<Expense[]>) => {
-          state.transactions.push(...action.payload);
-          state.totalSpending = totalExpense(state.transactions);
-          state.totalIncome = totalIncome(state.transactions);
-          state.total = totalAmout(state.transactions);
-        },
-      )
+      .addCase(addTransaction.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(addTransaction.fulfilled, (state, action) => {
+        const alreadyExists = state.transactions.some(
+          (transaction) =>
+            String(transaction.id) === String(action.payload.id),
+        );
+        if (!alreadyExists) {
+          state.transactions.unshift(action.payload);
+        }
+        state.transactionsRevision += 1;
+        state.lastAddedTransactionId = String(action.payload.id);
+        state.status = "succeeded";
+        state.error = null;
+        state.totalSpending = totalExpense(state.transactions);
+        state.totalIncome = totalIncome(state.transactions);
+        state.total = totalAmout(state.transactions);
+      })
+      .addCase(addTransaction.rejected, (state, action) => {
+        state.error =
+          action.payload ?? action.error.message ?? "Failed to add transaction";
+      })
       // Delete
       .addCase(deleteTransaction.pending, (state, action) => {
         const id = String(action.meta.arg);
@@ -165,6 +214,10 @@ const expenseSlice = createSlice({
         state.transactions = state.transactions.filter(
           (transaction) => String(transaction.id) !== action.payload,
         );
+        state.transactionsRevision += 1;
+        if (state.lastAddedTransactionId === action.payload) {
+          state.lastAddedTransactionId = null;
+        }
         state.deletingIds = state.deletingIds.filter(
           (id) => id !== action.payload,
         );
@@ -193,6 +246,7 @@ const expenseSlice = createSlice({
         if (index !== -1) {
           state.transactions[index] = action.payload;
         }
+        state.transactionsRevision += 1;
         state.totalSpending = totalExpense(state.transactions);
         state.totalIncome = totalIncome(state.transactions);
         state.total = totalAmout(state.transactions);

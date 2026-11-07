@@ -2,12 +2,19 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarInset,
+} from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Suspense } from "react";
 import Loading from "./loading";
 import StoreProvider from "@/lib/redux/StoreProvider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { SiteHeader } from "@/components/sidebar/SiteHeader";
+
+export const instant = false;
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -30,6 +37,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn(
         "h-full",
         "antialiased",
@@ -48,11 +56,21 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             disableTransitionOnChange
           >
             <StoreProvider>
-              <SidebarProvider>
+              <SidebarProvider
+                style={
+                  {
+                    "--sidebar-width": "calc(var(--spacing) * 72)",
+                    "--header-height": "calc(var(--spacing) * 12)",
+                  } as React.CSSProperties
+                }
+              >
                 <AppSidebar />
-                <div className="flex min-h-svh min-w-0 flex-1 flex-col">
-                  {children}
-                </div>
+                <SidebarInset>
+                  <SiteHeader />
+                  <div className="flex min-h-svh min-w-0 flex-1 flex-col">
+                    {children}
+                  </div>
+                </SidebarInset>
               </SidebarProvider>
             </StoreProvider>
           </ThemeProvider>
